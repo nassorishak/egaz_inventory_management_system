@@ -24,4 +24,13 @@ public class ProductService {
     public Product save(Optional<Product> product) {
         return productRepository.save(product.get());
     }
+
+    public void deleteById(Integer id) {
+
+    }
+    public Product save(Product product) {
+        return productRepository.save(product);
+    }
+
+
 }

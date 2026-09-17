@@ -184,6 +184,7 @@ package com.egaz.inventory.management.system.API;
 import com.egaz.inventory.management.system.model.Department;
 import com.egaz.inventory.management.system.model.User;
 import com.egaz.inventory.management.system.repository.DepartmentRepository;
+import com.egaz.inventory.management.system.repository.UserRepository;
 import com.egaz.inventory.management.system.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -201,6 +202,9 @@ public class UserApi {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private DepartmentRepository departmentRepository;
@@ -274,19 +278,46 @@ public class UserApi {
         }
     }
 
+//    @PostMapping("/login")
+//    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+//        String email = loginRequest.get("email");
+//        String password = loginRequest.get("password");
+//
+//        User user = userService.findByEmailAndPassword(email, password);
+//
+//        if (user == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+//        }
+//
+//        return ResponseEntity.ok(user);
+
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-        String email = loginRequest.get("email");
-        String password = loginRequest.get("password");
+    public ResponseEntity<?> login(@RequestBody User user) {
+        try {
+            // Find user by email and password
+            User foundUser = userRepository.findByEmailAndPassword(
+                    user.getEmail(),
+                    user.getPassword()
+            );
 
-        User user = userService.findByEmailAndPassword(email, password);
+            if (foundUser == null) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body("Invalid email or password");
+            }
 
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+            // ✅ Return user data including userId
+            return ResponseEntity.ok(foundUser);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Login error: " + e.getMessage());
         }
-
-        return ResponseEntity.ok(user);
     }
+
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody User user) {
