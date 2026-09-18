@@ -1,3 +1,5 @@
+
+
 package com.egaz.inventory.management.system.service;
 
 import com.egaz.inventory.management.system.model.*;
@@ -25,13 +27,16 @@ public class ProductRequestService {
                                         Integer productId,
                                         Integer departmentId,
                                         Integer quantity,
-                                        LocalDate issueDate) {
+                                        LocalDate issueDate,
+                                        String description) {          // ✅ added
 
         if (userId == null)       throw new RuntimeException("User ID is required");
         if (productId == null)    throw new RuntimeException("Product ID is required");
         if (departmentId == null) throw new RuntimeException("Department ID is required");
         if (quantity == null || quantity <= 0)
             throw new RuntimeException("Quantity must be greater than 0");
+        if (description == null || description.trim().isEmpty())
+            throw new RuntimeException("Description is required");    // ✅ validate
 
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found: " + userId));
@@ -61,6 +66,7 @@ public class ProductRequestService {
         req.setDepartment(dept);
         req.setQuantity(quantity);
         req.setIssueDate(issueDate != null ? issueDate : LocalDate.now());
+        req.setDescription(description.trim());          // ✅ save it
         req.setStatus("PENDING");
         req.setRequestDate(LocalDate.now());
 
@@ -85,12 +91,11 @@ public class ProductRequestService {
         return requestRepo.findByStatus(status);
     }
 
-
     // ========================================
-    // ADMIN: Approve (reduce stock)
+    // ADMIN: Approve (reduce stock + save note)
     // ========================================
     @Transactional
-    public ProductRequest approveRequest(Integer requestId) {
+    public ProductRequest approveRequest(Integer requestId, String note) {   // ✅ note param
         ProductRequest req = requestRepo.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
@@ -108,6 +113,7 @@ public class ProductRequestService {
         productRepo.save(product);
 
         req.setStatus("APPROVED");
+        req.setAdminNote(note);                          // ✅ save the note
         return requestRepo.save(req);
     }
 
@@ -126,5 +132,50 @@ public class ProductRequestService {
         req.setStatus("REJECTED");
         req.setAdminNote(note);
         return requestRepo.save(req);
+    }
+
+    // ========================================
+// ADMIN: Update request (edit fields)
+// ========================================
+    @Transactional
+    public ProductRequest updateRequest(Integer requestId,
+                                        Integer quantity,
+                                        LocalDate issueDate,
+                                        String description) {
+        ProductRequest req = requestRepo.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found: " + requestId));
+
+        if (quantity == null || quantity <= 0)
+            throw new RuntimeException("Quantity must be greater than 0");
+
+        if (description == null || description.trim().isEmpty())
+            throw new RuntimeException("Description is required");
+
+        // Optional: if still PENDING, verify against stock
+        if ("PENDING".equalsIgnoreCase(req.getStatus())) {
+            int stock = Integer.parseInt(req.getProduct().getProductQuantity());
+            if (quantity > stock) {
+                throw new RuntimeException(
+                        "Quantity (" + quantity + ") exceeds available stock (" + stock + ")"
+                );
+            }
+        }
+
+        req.setQuantity(quantity);
+        req.setIssueDate(issueDate != null ? issueDate : req.getIssueDate());
+        req.setDescription(description.trim());
+
+        return requestRepo.save(req);
+    }
+
+    // ========================================
+// ADMIN: Delete request
+// ========================================
+    @Transactional
+    public void deleteRequest(Integer requestId) {
+        if (!requestRepo.existsById(requestId)) {
+            throw new RuntimeException("Request not found: " + requestId);
+        }
+        requestRepo.deleteById(requestId);
     }
 }

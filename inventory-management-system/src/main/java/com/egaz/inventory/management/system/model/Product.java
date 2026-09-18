@@ -134,6 +134,8 @@ public class Product {
     @Column(name = "department_id")
     private Integer departmentId;
 
+
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
