@@ -339,4 +339,12 @@ public class UserApi {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
+
+    // ✅ NEW: Get all users — accessible at /api/users
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsersRoot() {
+        List<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+
+}
 }
