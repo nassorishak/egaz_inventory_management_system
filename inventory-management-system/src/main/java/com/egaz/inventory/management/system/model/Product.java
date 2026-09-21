@@ -143,4 +143,19 @@ public class Product {
     // getters + setters (keep your existing ones, add these)
     public Integer getDepartmentId() { return departmentId; }
     public void setDepartmentId(Integer departmentId) { this.departmentId = departmentId; }
+
+    public void setContractPurpose(String purpose) {
+    }
+
+    public void setContractSignature(String signature) {
+    }
+
+    public void setContractEndDate(LocalDate endDate) {
+    }
+
+    public void setContractStartDate(LocalDate startDate) {
+    }
+
+    public void setContractStatus(String submitted) {
+    }
 }

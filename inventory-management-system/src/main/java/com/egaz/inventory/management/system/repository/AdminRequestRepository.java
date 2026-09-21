@@ -15,4 +15,5 @@ public interface AdminRequestRepository extends JpaRepository<AdminRequest, Inte
     List<AdminRequest> findByStatusOrderByCreatedAtDesc(String status);
 
     List<AdminRequest> findByAdminIdOrderByCreatedAtDesc(Integer adminId);
+
 }
