@@ -3,13 +3,13 @@ package com.egaz.inventory.management.system.API;
 import com.egaz.inventory.management.system.model.Department;
 import com.egaz.inventory.management.system.model.User;
 import com.egaz.inventory.management.system.repository.DepartmentRepository;
-import com.egaz.inventory.management.system.repository.UserRepository;
 import com.egaz.inventory.management.system.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,9 +23,6 @@ public class UserApi {
     private UserService userService;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private DepartmentRepository departmentRepository;
 
     @PostMapping("/create")
@@ -36,7 +33,6 @@ public class UserApi {
         if (userName == null || userName.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("User name is required");
         }
-
         if (departmentIdStr == null || departmentIdStr.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Department ID is required");
         }
@@ -49,13 +45,13 @@ public class UserApi {
         }
 
         Optional<Department> departmentOpt = departmentRepository.findById(Math.toIntExact(departmentId));
-        if (!departmentOpt.isPresent()) {
+        if (departmentOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("Department not found");
         }
 
         User newUser = new User();
         newUser.setName(userName);
-        newUser.setDepartment(departmentOpt.get());
+        newUser.setDepartment(departmentOpt.get().getDepartmentId());
 
         try {
             userService.save(newUser);
@@ -69,23 +65,19 @@ public class UserApi {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         try {
-            // Validate required fields
-            if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()
+            if (user == null
+                    || user.getEmail() == null || user.getEmail().trim().isEmpty()
                     || user.getPassword() == null || user.getPassword().trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Email and password are required.");
             }
 
-            // Check if email already exists
-            User existingUser = userService.findByEmail(user.getEmail());
-            if (existingUser != null) {
+            if (userService.findByEmail(user.getEmail()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("An account with this email already exists.");
             }
 
-            // Save the new user to database
             User savedUser = userService.save(user);
-
             System.out.println("User registered successfully: " + savedUser.getEmail());
 
             return ResponseEntity.status(HttpStatus.CREATED).body("Account created successfully");
@@ -97,46 +89,31 @@ public class UserApi {
         }
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-//        String email = loginRequest.get("email");
-//        String password = loginRequest.get("password");
-//
-//        User user = userService.findByEmailAndPassword(email, password);
-//
-//        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
-//        }
-//
-//        return ResponseEntity.ok(user);
-
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
-        try {
-            // Find user by email and password
-            User foundUser = userRepository.findByEmailAndPassword(
-                    user.getEmail(),
-                    user.getPassword()
-            );
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        System.out.println("=== LOGIN ATTEMPT ===");
+        System.out.println("Email: " + request.getEmail());
 
-            if (foundUser == null) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body("Invalid email or password");
-            }
+        User user = userService.findByEmailAndPassword(request.getEmail(), request.getPassword());
 
-            // ✅ Return user data including userId
-            return ResponseEntity.ok(foundUser);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Login error: " + e.getMessage());
+        if (user == null) {
+            System.out.println("❌ Login failed");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password.");
         }
-    }
 
+        System.out.println("✅ Login OK for: " + user.getEmail());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("userId", user.getUserId());
+        response.put("userName", user.getUserName());
+        response.put("email", user.getEmail());
+        response.put("role", user.getRole());
+        response.put("departmentId", user.getDepartment());
+        response.put("gender", user.getGender());
+        response.put("phoneNumber", user.getPhoneNumber());
+
+        return ResponseEntity.ok(response);
+    }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody User user) {
@@ -152,18 +129,70 @@ public class UserApi {
         }
     }
 
-    // Get all users
     @GetMapping("/getAll")
     public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    // ✅ NEW: Get all users — accessible at /api/users
     @GetMapping
     public ResponseEntity<List<User>> getAllUsersRoot() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
 
-}
+    public static class LoginRequest {
+        private String email;
+        private String password;
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        try {
+            String email = body.get("email");
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Email is required.");
+            }
+
+            String token = userService.createPasswordResetToken(email.trim());
+            String resetLink = "http://localhost:3000/reset-password?token=" + token;
+
+            System.out.println("🔐 Reset link for " + email + ": " + resetLink);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "If the email exists, a reset link has been sent.");
+            response.put("token", token);
+            response.put("resetLink", resetLink);
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "If the email exists, a reset link has been sent.");
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        try {
+            String token = body.get("token");
+            String newPassword = body.get("newPassword");
+
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.badRequest().body("Token is required.");
+            }
+            if (newPassword == null || newPassword.length() < 6) {
+                return ResponseEntity.badRequest().body("Password must be at least 6 characters.");
+            }
+
+            userService.resetPassword(token, newPassword);
+            return ResponseEntity.ok("Password has been reset successfully.");
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

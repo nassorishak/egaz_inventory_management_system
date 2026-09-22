@@ -1,10 +1,10 @@
 package com.egaz.inventory.management.system.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Table(name = "user")
 public class User {
 
     @Id
@@ -18,65 +18,45 @@ public class User {
     private String phoneNumber;
     private String role;
 
-    @ManyToOne
-    @JoinColumn(name = "DepartmentId")
-    private Department department;
+    @Column(name = "department_id")
+    private Integer department;
 
-    // Explicit getters and setters (Lombok @Data already generates them,
-    // but if you want to keep them, they must use 'this' correctly)
+    @Column(name = "reset_token")
+    private String resetToken;
 
-    public Integer getUserId() {
-        return userId;
-    }
+    @Column(name = "reset_token_expires")
+    private LocalDateTime resetTokenExpires;
 
-    public void setUserId(Integer userId) {
-        this.userId = userId;  // ✅ fixed
-    }
+    public Integer getUserId() { return userId; }
+    public void setUserId(Integer userId) { this.userId = userId; }
 
-    public String getUserName() {
-        return userName;
-    }
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
 
-    public void setUserName(String userName) {
-        this.userName = userName;  // ✅ fixed
-    }
+    // alias used by createUser endpoint
+    public void setName(String userName) { this.userName = userName; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setEmail(String email) {
-        this.email = email;  // ✅ fixed
-    }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
-    public String getGender() {
-        return gender;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public void setGender(String gender) {
-        this.gender = gender;  // ✅ fixed
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
-    public void setPassword(String password) {
-        this.password = password;  // ✅ fixed
-    }
+    public Integer getDepartment() { return department; }
+    public void setDepartment(Integer department) { this.department = department; }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;  // ✅ fixed
-    }
-
-    // Optional: remove this confusing method
-    public void setName(String userName) {
-        this.userName = userName;  // ✅ fixed
-    }
-
-
+    public LocalDateTime getResetTokenExpires() { return resetTokenExpires; }
+    public void setResetTokenExpires(LocalDateTime resetTokenExpires) { this.resetTokenExpires = resetTokenExpires; }
 }
