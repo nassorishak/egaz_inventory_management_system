@@ -46,7 +46,7 @@ public class AdminRequestService {
         AdminRequest req = getById(id);
         if (req == null) throw new RuntimeException("Request not found with ID: " + id);
 
-        req.setStatus("APPROVED");
+        req.setStatus("CHECKED");
         req.setSuperAdminId(superAdminId);
         if (note != null) req.setSuperAdminNote(note);
         req.setRespondedAt(LocalDateTime.now());

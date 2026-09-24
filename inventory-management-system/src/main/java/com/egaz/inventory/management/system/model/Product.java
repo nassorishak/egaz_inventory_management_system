@@ -7,6 +7,7 @@
 //
 //@Entity
 //@Data
+//@Table(name = "product")
 //public class Product {
 //
 //    @Id
@@ -14,93 +15,42 @@
 //    private Integer productId;
 //
 //    private String productName;
-//
 //    private String productQuantity;
-//
 //    private LocalDate receiptDate;
-//
 //    private LocalDate issueDate;
-//
 //    private Integer price;
-//
 //    private String supplierName;
+//
+//    @Column(name = "product_description", length = 1000)
 //    private String productDescription;
 //
-//    @ManyToOne
+//    // ✅ NEW — simple FK column
+//    @Column(name = "department_id")
+//    private Integer departmentId;
+//
+//
+//
+//    @ManyToOne(fetch = FetchType.EAGER)
 //    @JoinColumn(name = "user_id")
 //    private User user;
 //
-//    public Integer getProductId() {
-//        return productId;
+//    // getters + setters (keep your existing ones, add these)
+//    public Integer getDepartmentId() { return departmentId; }
+//    public void setDepartmentId(Integer departmentId) { this.departmentId = departmentId; }
+//
+//    public void setContractPurpose(String purpose) {
 //    }
 //
-//    public void setProductId(Integer productId) {
-//        this.productId = productId;
+//    public void setContractSignature(String signature) {
 //    }
 //
-//    public String getProductName() {
-//        return productName;
+//    public void setContractEndDate(LocalDate endDate) {
 //    }
 //
-//    public void setProductName(String productName) {
-//        this.productName = productName;
+//    public void setContractStartDate(LocalDate startDate) {
 //    }
 //
-//    public String getProductQuantity() {
-//        return productQuantity;
-//    }
-//
-//    public void setProductQuantity(String productQuantity) {
-//        this.productQuantity = productQuantity;
-//    }
-//
-//    public LocalDate getReceiptDate() {
-//        return receiptDate;
-//    }
-//
-//    public void setReceiptDate(LocalDate receiptDate) {
-//        this.receiptDate = receiptDate;
-//    }
-//
-//    public LocalDate getIssueDate() {
-//        return issueDate;
-//    }
-//
-//    public void setIssueDate(LocalDate issueDate) {
-//        this.issueDate = issueDate;
-//    }
-//
-//    public Integer getPrice() {
-//        return price;
-//    }
-//
-//    public void setPrice(Integer price) {
-//        this.price = price;
-//    }
-//
-//    public String getSupplierName() {
-//        return supplierName;
-//    }
-//
-//    public void setSupplierName(String supplierName) {
-//        this.supplierName = supplierName;
-//    }
-//
-//    public User getUser() {
-//        return user;
-//    }
-//
-//    public void setUser(User user) {
-//        this.user = user;
-//    }
-//
-//
-//    public String getProductDescription() {
-//        return productDescription;
-//    }
-//
-//    public void setProductDescription(String productDescription) {
-//        this.productDescription = productDescription;
+//    public void setContractStatus(String submitted) {
 //    }
 //}
 
@@ -130,19 +80,31 @@ public class Product {
     @Column(name = "product_description", length = 1000)
     private String productDescription;
 
-    // ✅ NEW — simple FK column
+    // ✅ FK column
     @Column(name = "department_id")
     private Integer departmentId;
 
+    // ✅ NEW — Receipt Voucher No
+    @Column(name = "receipt_voucher_no", length = 100)
+    private String receiptVoucherNo;
 
+    // ✅ NEW — Balance
+    @Column(name = "balance")
+    private Integer balance;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // getters + setters (keep your existing ones, add these)
+    // getters + setters
     public Integer getDepartmentId() { return departmentId; }
     public void setDepartmentId(Integer departmentId) { this.departmentId = departmentId; }
+
+    public String getReceiptVoucherNo() { return receiptVoucherNo; }
+    public void setReceiptVoucherNo(String receiptVoucherNo) { this.receiptVoucherNo = receiptVoucherNo; }
+
+    public Integer getBalance() { return balance; }
+    public void setBalance(Integer balance) { this.balance = balance; }
 
     public void setContractPurpose(String purpose) {
     }
