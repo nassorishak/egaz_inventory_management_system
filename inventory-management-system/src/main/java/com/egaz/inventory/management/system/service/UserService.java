@@ -2,6 +2,7 @@ package com.egaz.inventory.management.system.service;
 
 import com.egaz.inventory.management.system.model.User;
 import com.egaz.inventory.management.system.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,26 +33,54 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User updateUser(User user) {
-        if (user.getUserId() == null) {
-            throw new IllegalArgumentException("User ID must not be null for update.");
-        }
-        User existingUser = userRepository.findById(user.getUserId())
-                .orElseThrow(() -> new RuntimeException("User with ID " + user.getUserId() + " not found."));
-
-        existingUser.setUserName(user.getUserName());
-        existingUser.setEmail(user.getEmail());
-        existingUser.setGender(user.getGender());
-        existingUser.setPhoneNumber(user.getPhoneNumber());
-        existingUser.setDepartment(user.getDepartment());
-
-        // only update password if provided (non-empty) — and hash it
-        if (user.getPassword() != null && !user.getPassword().isBlank()) {
-            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
-
-        return userRepository.save(existingUser);
+//    public User updateUser(User user) {
+//        if (user.getUserId() == null) {
+//            throw new IllegalArgumentException("User ID must not be null for update.");
+//        }
+//        User existingUser = userRepository.findById(user.getUserId())
+//                .orElseThrow(() -> new RuntimeException("User with ID " + user.getUserId() + " not found."));
+//
+//        existingUser.setUserName(user.getUserName());
+//        existingUser.setEmail(user.getEmail());
+//        existingUser.setGender(user.getGender());
+//        existingUser.setPhoneNumber(user.getPhoneNumber());
+//        existingUser.setDepartment(user.getDepartment());
+//
+//        // only update password if provided (non-empty) — and hash it
+//        if (user.getPassword() != null && !user.getPassword().isBlank()) {
+//            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+//        }
+//
+//        return userRepository.save(existingUser);
+//    }
+@Transactional
+public User updateUser(User user) {
+    if (user.getUserId() == null) {
+        throw new IllegalArgumentException("User ID must not be null for update.");
     }
+    User existingUser = userRepository.findById(user.getUserId())
+            .orElseThrow(() -> new RuntimeException("User with ID " + user.getUserId() + " not found."));
+
+    existingUser.setUserName(user.getUserName());
+    existingUser.setEmail(user.getEmail());
+    existingUser.setGender(user.getGender());
+    existingUser.setPhoneNumber(user.getPhoneNumber());
+    existingUser.setDepartment(user.getDepartment());
+    existingUser.setRole(user.getRole());               // ✅ was missing
+
+    if (user.getPassword() != null && !user.getPassword().isBlank()) {
+        // guard: don't re-hash an already-hashed password
+        String pwd = user.getPassword();
+        boolean alreadyHashed = pwd.startsWith("$2a$")
+                || pwd.startsWith("$2b$")
+                || pwd.startsWith("$2y$");
+        if (!alreadyHashed) {
+            existingUser.setPassword(passwordEncoder.encode(pwd));
+        }
+    }
+
+    return userRepository.save(existingUser);
+}
 
     public void deleteById(Integer userId) { userRepository.deleteById(userId); }
     public void delete(User user) { userRepository.delete(user); }

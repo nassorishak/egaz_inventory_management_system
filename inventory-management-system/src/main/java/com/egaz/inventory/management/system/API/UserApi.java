@@ -115,19 +115,48 @@ public class UserApi {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody User user) {
-        try {
-            user.setUserId(id);
-            User updatedUser = userService.updateUser(user);
-            return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating user");
+//    @PutMapping("/update/{id}")
+//    public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody User user) {
+//        try {
+//            user.setUserId(id);
+//            User updatedUser = userService.updateUser(user);
+//            return ResponseEntity.ok(updatedUser);
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating user");
+//        }
+//    }
+@PutMapping("/update/{id}")
+public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody Map<String, Object> payload) {
+    try {
+        User user = new User();
+        user.setUserId(id);
+        user.setUserName((String) payload.get("userName"));
+        user.setEmail((String) payload.get("email"));
+        user.setGender((String) payload.get("gender"));
+        user.setPassword((String) payload.get("password"));
+        user.setPhoneNumber((String) payload.get("phoneNumber"));
+        user.setRole((String) payload.get("role"));
+
+        Object dept = payload.get("department");
+        if (dept instanceof Map) {
+            Object deptId = ((Map<?, ?>) dept).get("departmentId");
+            if (deptId != null) user.setDepartment(Integer.parseInt(deptId.toString()));
+        } else if (dept != null) {
+            user.setDepartment(Integer.parseInt(dept.toString()));
         }
+
+        User updatedUser = userService.updateUser(user);
+        return ResponseEntity.ok(updatedUser);
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating user");
     }
+}
 
     @GetMapping("/getAll")
     public ResponseEntity<List<User>> getAllUsers() {
